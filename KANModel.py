@@ -2,6 +2,7 @@ import torch as torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from DataRead import OurData
 
 from kan import KAN, create_dataset
 #literally copied the code below from the documentation.  Need to figure out what does what
@@ -10,6 +11,7 @@ from kan import KAN, create_dataset
 torch.set_default_dtype(torch.float64)
 #set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+input_size = 20*20 # from 28*28
 
 '''
 initialize model
@@ -19,23 +21,19 @@ initialize model
     seed: random seed
     grid: grid intervals/grid points (affects the accuracy of the splines/learnable functions)
 '''
-model = KAN(width=[2,5,1], grid=5, k=3, seed=0, device=device)
+model = KAN(width=[2, 5, 1], grid=5, k=3, seed=0, device=device)
 
 #to-do: modify f into a function that returns the values from out dataset
-f = lambda x: torch.exp(torch.sin(torch.pi*x[:,[0]]) + x[:,[1]]**2) # function to approximate
-# info on create_dataset in utils.py
-dataset = create_dataset(f, n_var=2, device=device) # creates a dataset from a function f. f itself is a function that takes in x
-#will need to replace create_dataset with the following:
-ourdata = {}
-'''
-ourdata['train_input'] = torch.tensor() #contains the training data, each data is the binary representation
-of an image as per the MNIST dataset
-ourdata['test_input'] = torch.tensor() #contains the testing data, same format as train_input
-ourdata['train_label'] = torch.tensor() #contains the labels for the training data
-ourdata['test_label'] = torch.tensor() #contains the labels for the testing data
-'''
 
-model(dataset['train_input']) #forward pass of the model
+#Our dataset
+data = OurData()
+ourdata = {}
+ourdata['train_input'] = data['train_input'].view(-1, input_size)
+ourdata['train_label'] = data['train_label']
+ourdata['test_input'] = data['test_input'].view(-1, input_size)
+ourdata['test_label'] = data['test_label']
+
+model(ourdata['train_input']) #forward pass of the model
 model.plot() #plots the model
 
 #code to train the model
@@ -45,10 +43,12 @@ Training the model off the dataset
 - steps: training steps
 - lamb: penalty parameter
 other parameters: lr = learning rate = 1, loss_fn = loss function = None
-
+'''
 #fits the model to the dataset
-model.fit(dataset, opt="LBFGS", steps=50, lamb=0.001) #values from the basic example in the documentation
+'''
+model.fit(ourdata, opt="LBFGS", steps=50, lamb=0.001) #values from the basic example in the documentation
 model.plot() #plots the model
+print("done")
 
 model = model.prune()
 model.plot()
