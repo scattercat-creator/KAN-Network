@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import struct
 
-torch.set_default_dtype(torch.float64)
+torch.set_default_dtype(torch.float32)
 
 def read_idx(filename):
     with open(filename, 'rb') as f:
