@@ -11,7 +11,7 @@ from kan import KAN, create_dataset
 torch.set_default_dtype(torch.float64)
 #set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-input_size = 20*20 # from 28*28
+input_size = 28*28 # 28*28
 
 '''
 initialize model
@@ -22,19 +22,26 @@ initialize model
     grid: grid intervals/grid points (affects the accuracy of the splines/learnable functions)
 '''
 model = KAN(width=[2, 5, 1], grid=5, k=3, seed=0, device=device)
+model2 = KAN(width=[2, 5, 1], grid=5, k=3, seed=0, device=device)
 
 #to-do: modify f into a function that returns the values from out dataset
 
 #Our dataset
 data = OurData()
 ourdata = {}
-ourdata['train_input'] = data['train_input'].view(-1, input_size)
-ourdata['train_label'] = data['train_label']
-ourdata['test_input'] = data['test_input'].view(-1, input_size)
-ourdata['test_label'] = data['test_label']
+for key in data.ourdataset:
+    ourdata[key] = data.ourdataset[key]
 
 model(ourdata['train_input']) #forward pass of the model
 model.plot() #plots the model
+print("done")
+'''
+f = lambda x: torch.exp(torch.sin(torch.pi*x[:,[0]]) + x[:,[1]]**2)
+dataset = create_dataset(f, n_var=2, device=device)
+model2(dataset['train_input'])
+model2.plot()
+print(dataset['train_input'], ourdata['train_input'])
+'''
 
 #code to train the model
 '''
