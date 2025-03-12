@@ -22,28 +22,19 @@ initialize model
     seed: random seed
     grid: grid intervals/grid points (affects the accuracy of the splines/learnable functions)
 '''
-model = KAN(width=[784, 5, 1], grid=5, k=3, seed=0, device=device)
-#model2 = KAN(width=[2, 5, 1], grid=5, k=3, seed=0, device=device)
+model = KAN(width=[784, 10, 1], grid=5, k=3, seed=0, device=device)
+model2 = KAN(width=[28, 10, 1], grid=5, k=3, seed=0, device=device, ckpt_path='./model2')
+model3 = KAN(width=[3, 5, 1], grid=5, k=3, seed=0, device=device, ckpt_path='./model3')
 
-#to-do: modify f into a function that returns the values from out dataset
-
-#Our dataset
-data = OurData()
+data = OurData() #Our dataset
 ourdata = {}
+ourdata2 = {}
+ourdata3 = {}
 for key in data.ourdataset:
-    ourdata[key] = (data.ourdataset[key])[:10] #only get the first 10 data points for now
-
- #check the shape of our dataset against the create_dataset function which we know works
-f = lambda x: x[:, [0]] + x[:, [1]] # This function takes a 2D tensor and returns the sum of the first and second columns
-dataset = create_dataset(f, n_var=2, device=device)
-'''
-print(dataset['train_input'].shape, ourdata['train_input'].shape)
-print(dataset['train_label'].shape, ourdata['train_label'].shape)
-    #checking to see if the data points are only 0s(it looks like it from the outputs but they are not)
-print(ourdata['train_input'][1])
-print(ourdata['train_input'][2])
-'''
-#ourdata['train_input'] = ourdata['train_input'] + 1 #add 1 to the data points to make them non-zero. Didnt fix the coef error
+    #total train datapoints=60000, test datapoints=10000. approx time:
+    ourdata[key] = data.ourdataset[key][:100] #only get the first 100 data points for now
+    ourdata2[key] = data.getsliced(key, 28)[:1000] #each element is a sum of a row of the 2d array
+    ourdata3[key] = data.getsliced(key, 3)[:2000] #each element is a sum of a third of the entire 2d array
 
 #this is where the error is originating from. coef is uninitialized in the forward pass due to a matrix opteration error, possibly due to our differences in our datasets
 ''' inside the initial curve2coef function
@@ -54,9 +45,10 @@ except Exception as e:
 
 keeps returning the exception for our dataset but not for the dataset created by create_dataset
 '''
-#model2(dataset['train_input']) #to see what the matrix/y_eval looks like
 
 model(ourdata['train_input']) #forward pass of the model
+model2(ourdata2['train_input']) 
+model3(ourdata3['train_input']) 
 #print("model pass complete")
 #model.plot() #plots the model, avoid doing this since it will plot functions for all the neurons(and we have a lot since we are dealing with images)
 
@@ -67,16 +59,20 @@ Training the model off the dataset
 - lamb: penalty parameter
 other parameters: lr = learning rate = 1, loss_fn = loss function = None
 '''
-try:
-    #currently doesn't work since all the coefficients are uninitialized???
-    #the coefficients are uninitialized due to problems in the initial forward pass
-    model.fit(ourdata, opt="LBFGS", steps=50, lamb=0.001) #values from the basic example in the documentation
-except Exception as e:
-    print(e)
-    traceback.print_exc()
+modelresults = []
+modelresults.append(model.fit(ourdata, opt="LBFGS", steps=50, lamb=0.001)) #values from the basic example in the documentation
+modelresults.append(model2.fit(ourdata2, opt="LBFGS", steps=50, lamb=0.001))
+modelresults.append(model3.fit(ourdata3, opt="LBFGS", steps=50, lamb=0.001))
+#model.plot() #plots the model, avoid doing this since it will plot functions for all the neurons(and we have a lot since we are dealing with images)
 
-'''
-#model.plot()
-model = model.prune()
-model.plot()
-'''
+eval1 = model.evaluate(ourdata)
+eval2 = model2.evaluate(ourdata2)
+eval3 = model3.evaluate(ourdata3)
+evaluation_results = [eval1, eval2, eval3]
+test_losses = [[result['test_loss'] for result in evaluation_results]]
+
+testingdata = data.getitems(9950, 10000) 
+results = model.forward(testingdata[0])
+results2 = model2.forward(testingdata[0])
+results3 = model3.forward(testingdata[0])
+
