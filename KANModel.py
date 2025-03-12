@@ -14,6 +14,23 @@ torch.set_default_dtype(torch.float32)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 input_size = 28*28 # 28*28
 
+def getsliced(dataset, slice = 1):
+        fraction = int(784/slice)
+        arr = torch.tensor([])
+        for i in range(slice):
+            arr = torch.cat((arr, dataset[:, i*fraction:(i+1)*fraction].sum(dim=1, keepdim=True)), dim=1)
+        return arr
+
+data = OurData() #Our dataset
+ourdata = {}
+ourdata2 = {}
+ourdata3 = {}
+for key in data.ourdataset:
+    #total train datapoints=60000, test datapoints=10000. approx time:
+    ourdata[key] = data.ourdataset[key][:100] #only get the first 100 data points for now
+    ourdata2[key] = getsliced(data.ourdataset[key], 28)[:1000] #each element is a sum of a row of the 2d array
+    ourdata3[key] = getsliced(data.ourdataset[key], 3)[:2000] #each element is a sum of a third of the entire 2d array
+
 '''
 initialize model
 - refer to MultKAN.py for more information
@@ -25,16 +42,6 @@ initialize model
 model = KAN(width=[784, 10, 1], grid=5, k=3, seed=0, device=device)
 model2 = KAN(width=[28, 10, 1], grid=5, k=3, seed=0, device=device, ckpt_path='./model2')
 model3 = KAN(width=[3, 5, 1], grid=5, k=3, seed=0, device=device, ckpt_path='./model3')
-
-data = OurData() #Our dataset
-ourdata = {}
-ourdata2 = {}
-ourdata3 = {}
-for key in data.ourdataset:
-    #total train datapoints=60000, test datapoints=10000. approx time:
-    ourdata[key] = data.ourdataset[key][:100] #only get the first 100 data points for now
-    ourdata2[key] = data.getsliced(key, 28)[:1000] #each element is a sum of a row of the 2d array
-    ourdata3[key] = data.getsliced(key, 3)[:2000] #each element is a sum of a third of the entire 2d array
 
 #this is where the error is originating from. coef is uninitialized in the forward pass due to a matrix opteration error, possibly due to our differences in our datasets
 ''' inside the initial curve2coef function
@@ -73,6 +80,6 @@ test_losses = [[result['test_loss'] for result in evaluation_results]]
 
 testingdata = data.getitems(9950, 10000) 
 results = model.forward(testingdata[0])
-results2 = model2.forward(testingdata[0])
-results3 = model3.forward(testingdata[0])
+results2 = model2.forward(getsliced(testingdata[0], 28))
+results3 = model3.forward(getsliced(testingdata[0], 3))
 

@@ -24,12 +24,6 @@ class OurData:
         #print("These are our training inputs and labels")
     def __getitem__(self):
         return self.ourdataset
-    def getsliced(self, key, slice = 1):
-        fraction = int(784/slice)
-        arr = torch.tensor([])
-        for i in range(slice):
-            arr = torch.cat((arr, self.ourdataset[key][:, i*fraction:(i+1)*fraction].sum(dim=1, keepdim=True)), dim=1)
-        return arr
     def getitems(self, index, endindex = 10000, test = True):
         key = 'test_input' if test else 'train_input'
         key2 = 'test_label' if test else 'train_label'
