@@ -21,8 +21,16 @@ class OurData:
         self.ourdataset['test_input'] = (test_images).view(-1, 28*28) #reshapes the data into a 2D array, each row is an image
         
         #to-do: convert the lablels into 10 element arrays for classification
-        self.ourdataset['train_label'] = read_idx('/workspaces/KAN-Network/Dataset/train-labels-idx1-ubyte/train-labels-idx1-ubyte').unsqueeze(1) #contains the labels for the training data
-        self.ourdataset['test_label'] = read_idx('/workspaces/KAN-Network/Dataset/t10k-labels-idx1-ubyte/t10k-labels-idx1-ubyte').unsqueeze(1) #contains the labels for the testing data
+        train_label = read_idx('/workspaces/KAN-Network/Dataset/train-labels-idx1-ubyte/train-labels-idx1-ubyte').unsqueeze(1) #contains the labels for the training data
+        test_label = read_idx('/workspaces/KAN-Network/Dataset/t10k-labels-idx1-ubyte/t10k-labels-idx1-ubyte').unsqueeze(1) #contains the labels for the testing data
+        self.ourdataset['train_label'] = torch.zeros(len(train_label), 10)
+        self.ourdataset['test_label'] = torch.zeros(len(test_label), 10)
+        #print(self.ourdataset['train_label'].size(), self.ourdataset['test_label'].size())
+        #the code below assigns a value of 1 to the correct labels in the 10 element array, everything else is 0
+        for i in range(len(train_label)):
+            self.ourdataset['train_label'][i][train_label[i].long()] = 1
+        for i in range(len(test_label)):
+            self.ourdataset['test_label'][i][test_label[i].long()] = 1
         #print("These are our training inputs and labels")
     def __getitem__(self):
         return self.ourdataset
