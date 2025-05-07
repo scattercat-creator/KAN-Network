@@ -33,7 +33,7 @@ initialize model
     grid: grid intervals/grid points (affects the accuracy of the splines/learnable functions)
 '''
 model = KAN(width=[784, 80, 10], grid=5, k=3, seed=0, device=device)
-model2 = KAN(width=[112, 40, 10], grid=5, k=3, seed=0, device=device, ckpt_path='./model2')
+model2 = KAN(width=[196, 40, 10], grid=5, k=3, seed=0, device=device, ckpt_path='./model2')
 model3 = KAN(width=[28, 20, 10], grid=5, k=3, seed=0, device=device, ckpt_path='./model3')
 
 '''to load a model from a checkpoint, uncomment the following code
@@ -77,7 +77,7 @@ test_losses = [[result['test_loss'] for result in evaluation_results]]
 
 testingdata = data.getitems(9950, 10000) 
 predictions = model.forward(testingdata[0])
-predictions2 = model2.forward(compress(testingdata[0], 112))
+predictions2 = model2.forward(compress(testingdata[0], 196))
 predictions3 = model3.forward(compress(testingdata[0], 28))
 allpredictions = [predictions, predictions2, predictions3]
 
